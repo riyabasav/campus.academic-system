@@ -1,0 +1,7 @@
+target/
+*.log
+*.class
+.DS_Store
+.idea/
+*.iml
+/home/jules/verification/

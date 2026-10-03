@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <div class="mb-3">
+                <a th:href="@{/}" class="text-decoration-none text-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-journal-plus me-2"></i>Event Registration</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Event Brief Details -->
+                    <div class="p-3 bg-light rounded mb-4 border">
+                        <span class="badge bg-info text-dark mb-1" th:text="${event.clubName}">Club Name</span>
+                        <h5 class="fw-bold text-dark mb-2" th:text="${event.title}">Event Title</h5>
+                        <p class="small text-muted mb-2" th:text="${event.description}">Description</p>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span><i class="bi bi-clock me-1 text-primary"></i> <span th:text="${#temporals.format(event.eventDate, 'MMM dd, yyyy - hh:mm a')}">Date</span></span>
+                            <span><i class="bi bi-geo-alt me-1 text-danger"></i> <span th:text="${event.location}">Venue</span></span>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i><span th:text="${event.remainingSeats}">10</span> Seats Remaining</span>
+                        </div>
+                    </div>
+
+                    <!-- Student Registration Form -->
+                    <form th:action="@{/events/{id}/register(id=${event.id})}" method="post">
+                        <div class="mb-3">
+                            <label for="studentName" class="form-label fw-semibold">Student Full Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input type="text" class="form-control" id="studentName" name="studentName" placeholder="e.g. Alex Johnson" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="studentEmail" class="form-label fw-semibold">Student Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="studentEmail" name="studentEmail" placeholder="e.g. alex.johnson@campus.edu" required>
+                            </div>
+                            <div class="form-text">Your digital pass will be displayed immediately and emailed to this address.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold">
+                                <i class="bi bi-ticket-detailed me-2"></i>Confirm Registration &amp; Get Pass
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
