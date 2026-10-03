@@ -1,7 +1,7 @@
 # Zero-Touch Prerequisites Setup Script for Windows
 # Requires Administrator privileges for system-wide PATH updates and package installation.
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host " Campus Event Management System - Environment Setup Script" -ForegroundColor Cyan
@@ -19,7 +19,7 @@ function Install-WingetPackage {
         winget install --id $PackageId --silent --accept-source-agreements --accept-package-agreements
         Write-Host "[+] Installation process finished for $Name." -ForegroundColor Green
     } catch {
-        Write-Host "[!] Winget installation for $Name encountered an notice/warning: $_" -ForegroundColor DarkYellow
+        Write-Host "[!] Winget installation attempt for $Name finished with notice: $_" -ForegroundColor DarkYellow
     }
 }
 
@@ -36,28 +36,29 @@ $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTa
 
 # Combine machine and user paths
 $combinedPath = "$machinePath;$userPath"
-
-# Update current process PATH
 $env:Path = $combinedPath
 
-# Check common default installation locations if not found
-$jdkDefaultPath = "C:\Program Files\Microsoft\jdk-21*\bin"
-$mvnDefaultPath = "C:\Program Files\Apache\maven-*\bin", "C:\Program Files\Maven\apache-maven-*\bin"
+# Search for JDK and Maven bin directories across common installation paths
+$searchPatterns = @(
+    "C:\Program Files\Microsoft\jdk-21*\bin",
+    "C:\Program Files\Java\jdk-21*\bin",
+    "C:\Program Files\Apache\maven-*\bin",
+    "C:\Program Files\Apache\apache-maven-*\bin",
+    "C:\Program Files\Maven\apache-maven-*\bin",
+    "C:\Program Files\Apache Software Foundation\apache-maven-*\bin",
+    "C:\apache-maven-*\bin",
+    "C:\tools\apache-maven-*\bin",
+    "C:\ProgramData\chocolatey\bin"
+)
 
-$resolvedJdkPaths = Get-ChildItem -Path $jdkDefaultPath -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-if ($resolvedJdkPaths) {
-    foreach ($p in $resolvedJdkPaths) {
-        if ($env:Path -notlike "*$p*") {
-            $env:Path = "$p;$env:Path"
-        }
-    }
-}
-
-$resolvedMvnPaths = Get-ChildItem -Path $mvnDefaultPath -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-if ($resolvedMvnPaths) {
-    foreach ($p in $resolvedMvnPaths) {
-        if ($env:Path -notlike "*$p*") {
-            $env:Path = "$p;$env:Path"
+foreach ($pattern in $searchPatterns) {
+    $foundDirs = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+    if ($foundDirs) {
+        foreach ($dir in $foundDirs) {
+            if ($env:Path -notlike "*$dir*") {
+                Write-Host "[+] Adding discovered tool directory to current PATH: $dir" -ForegroundColor Green
+                $env:Path = "$dir;$env:Path"
+            }
         }
     }
 }
@@ -66,18 +67,26 @@ Write-Host "==========================================================" -Foregro
 Write-Host " Verifying Installed Tooling Versions" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 
+$javaFound = $false
 try {
     Write-Host "Java Version:" -ForegroundColor Yellow
     java -version
+    $javaFound = $true
 } catch {
-    Write-Host "[!] Java not found in current PATH. Please restart terminal or verify OpenJDK 21 installation." -ForegroundColor Red
+    Write-Host "[!] Java command not found in current PATH." -ForegroundColor Red
 }
 
+$mvnFound = $false
 try {
     Write-Host "`nMaven Version:" -ForegroundColor Yellow
     mvn -version
+    $mvnFound = $true
 } catch {
-    Write-Host "[!] Maven not found in current PATH. Please restart terminal or verify Maven installation." -ForegroundColor Red
+    Write-Host "[!] Maven command ('mvn') not found in current PATH." -ForegroundColor DarkYellow
+}
+
+if (-not $mvnFound -and (Test-Path ".\mvnw.cmd")) {
+    Write-Host "[+] Maven Wrapper (mvnw.cmd) is available in the repository root and ready for deployment!" -ForegroundColor Green
 }
 
 Write-Host "`n[+] Environment Setup Complete! You can now run .\deploy.ps1 to build and launch the application." -ForegroundColor Green
