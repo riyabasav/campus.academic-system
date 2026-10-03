@@ -36,7 +36,22 @@ public class CampusEventUiTest {
     @BeforeAll
     static void launchBrowser() {
         playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+        try {
+            // Try standard Playwright Chromium driver
+            browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+        } catch (Exception e) {
+            try {
+                // Fallback to pre-installed system Microsoft Edge
+                browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("msedge").setHeadless(true));
+            } catch (Exception ex1) {
+                try {
+                    // Fallback to pre-installed system Chrome
+                    browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true));
+                } catch (Exception ex2) {
+                    throw new RuntimeException("Could not launch Playwright browser. " + e.getMessage(), e);
+                }
+            }
+        }
     }
 
     @AfterAll
