@@ -1,9 +1,0 @@
-com/campus/events/repository/EventRegistrationRepository.class
-com/campus/events/controller/EventController.class
-com/campus/events/model/EventRegistration.class
-com/campus/events/config/DataInitializer.class
-com/campus/events/model/Event.class
-com/campus/events/repository/EventRepository.class
-com/campus/events/service/EventService.class
-com/campus/events/CampusEventsApplication.class
-com/campus/events/service/EmailService.class

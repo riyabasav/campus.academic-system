@@ -1,9 +1,0 @@
-/app/src/main/java/com/campus/events/model/Event.java
-/app/src/main/java/com/campus/events/repository/EventRepository.java
-/app/src/main/java/com/campus/events/service/EmailService.java
-/app/src/main/java/com/campus/events/model/EventRegistration.java
-/app/src/main/java/com/campus/events/repository/EventRegistrationRepository.java
-/app/src/main/java/com/campus/events/service/EventService.java
-/app/src/main/java/com/campus/events/config/DataInitializer.java
-/app/src/main/java/com/campus/events/CampusEventsApplication.java
-/app/src/main/java/com/campus/events/controller/EventController.java
