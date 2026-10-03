@@ -1,6 +1,9 @@
 # Zero-Touch Deployment & Application Launch Script for Windows
 $ErrorActionPreference = "Stop"
 
+# Configure Playwright alternate CDN mirror in case default azureedge.net CDN is blocked
+$env:PLAYWRIGHT_DOWNLOAD_HOST = "https://cdn.playwright.dev"
+
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host " Campus Event Management System - Automated Build & Deploy" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
