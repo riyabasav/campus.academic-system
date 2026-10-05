@@ -1,7 +1,9 @@
 package com.campus.events.service;
 
+import com.campus.events.model.Club;
 import com.campus.events.model.Event;
 import com.campus.events.model.EventRegistration;
+import com.campus.events.repository.ClubRepository;
 import com.campus.events.repository.EventRegistrationRepository;
 import com.campus.events.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +20,17 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
+    private final ClubRepository clubRepository;
     private final EmailService emailService;
 
     @Autowired
-    public EventService(EventRepository eventRepository, EventRegistrationRepository registrationRepository, EmailService emailService) {
+    public EventService(EventRepository eventRepository,
+                        EventRegistrationRepository registrationRepository,
+                        ClubRepository clubRepository,
+                        EmailService emailService) {
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
+        this.clubRepository = clubRepository;
         this.emailService = emailService;
     }
 
@@ -38,6 +45,15 @@ public class EventService {
     @Transactional
     public Event saveEvent(Event event) {
         return eventRepository.save(event);
+    }
+
+    public List<Club> getAllClubs() {
+        return clubRepository.findAll();
+    }
+
+    @Transactional
+    public Club saveClub(Club club) {
+        return clubRepository.save(club);
     }
 
     @Transactional

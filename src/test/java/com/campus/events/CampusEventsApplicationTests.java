@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -52,10 +54,12 @@ class CampusEventsApplicationTests {
     }
 
     @Test
-    void testCreateEvent() throws Exception {
+    @WithMockUser(username = "Admin", roles = {"ADMIN"})
+    void testCreateEventAsAdmin() throws Exception {
         long initialCount = eventRepository.count();
 
         mockMvc.perform(post("/events")
+                        .with(csrf())
                         .param("title", "Robotics Expo")
                         .param("clubName", "Robotics Club")
                         .param("description", "Exhibition of student robotics projects.")
@@ -93,6 +97,7 @@ class CampusEventsApplicationTests {
         event = eventRepository.save(event);
 
         mockMvc.perform(post("/events/" + event.getId() + "/register")
+                        .with(csrf())
                         .param("studentName", "Jane Doe")
                         .param("studentEmail", "jane.doe@campus.edu"))
                 .andExpect(status().isOk())

@@ -1,6 +1,8 @@
 package com.campus.events.config;
 
+import com.campus.events.model.Club;
 import com.campus.events.model.Event;
+import com.campus.events.repository.ClubRepository;
 import com.campus.events.repository.EventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +18,16 @@ public class DataInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
     @Bean
-    public CommandLineRunner initDatabase(EventRepository eventRepository) {
+    public CommandLineRunner initDatabase(EventRepository eventRepository, ClubRepository clubRepository) {
         return args -> {
+            if (clubRepository.count() == 0) {
+                logger.info("Seeding initial campus clubs...");
+                clubRepository.save(new Club("Tech Club", "Fostering technology, AI, and software engineering innovation."));
+                clubRepository.save(new Club("Coding Society", "Promoting competitive programming, hackathons, and open source development."));
+                clubRepository.save(new Club("Arts & Culture Club", "Celebrating music, performing arts, and visual design on campus."));
+                logger.info("Sample campus clubs successfully seeded.");
+            }
+
             if (eventRepository.count() == 0) {
                 logger.info("Seeding initial campus events...");
 

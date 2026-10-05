@@ -37,15 +37,12 @@ public class CampusEventUiTest {
     static void launchBrowser() {
         playwright = Playwright.create();
         try {
-            // Try standard Playwright Chromium driver
             browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
         } catch (Exception e) {
             try {
-                // Fallback to pre-installed system Microsoft Edge
                 browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("msedge").setHeadless(true));
             } catch (Exception ex1) {
                 try {
-                    // Fallback to pre-installed system Chrome
                     browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true));
                 } catch (Exception ex2) {
                     throw new RuntimeException("Could not launch Playwright browser. " + e.getMessage(), e);
@@ -81,25 +78,37 @@ public class CampusEventUiTest {
         return "http://localhost:" + port;
     }
 
+    private void loginAsAdmin() {
+        page.navigate(getBaseUrl() + "/login");
+        page.fill("#username", "Admin");
+        page.fill("#password", "despu@admin123");
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Sign In as Admin")).click();
+        assertThat(page).hasURL(getBaseUrl() + "/");
+    }
+
     @Test
     @DisplayName("Test 1: Event Dashboard Rendering")
     void testDashboardRendering() {
-        // Navigate to dashboard
         page.navigate(getBaseUrl() + "/");
 
-        // Verify page title and header
         assertThat(page).hasTitle(Pattern.compile("Campus Events"));
         assertThat(page.locator(".hero-banner")).containsText("Campus Events & Club Activities");
-
-        // Assert that sample seed events (e.g. "AI & Web3 Workshop") are visible
         assertThat(page.getByText("AI & Web3 Workshop")).isVisible();
         assertThat(page.getByText("Annual Hackathon Recruitment")).isVisible();
     }
 
     @Test
-    @DisplayName("Test 2: Create New Campus Event")
-    void testCreateNewCampusEvent() {
-        page.navigate(getBaseUrl() + "/");
+    @DisplayName("Test 2: Admin Login and Create New Campus Event & Club")
+    void testAdminCreateNewCampusEventAndClub() {
+        // Sign in as Admin
+        loginAsAdmin();
+
+        // Create a new Club first
+        page.fill("#cName", "Robotics Club");
+        page.fill("#cDesc", "Building autonomous robotics");
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Club")).click();
+
+        assertThat(page.getByText("Robotics Club").first()).isVisible();
 
         // Generate future date formatted as yyyy-MM-ddTHH:mm
         String futureDateTime = LocalDateTime.now().plusDays(15).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
@@ -115,9 +124,8 @@ public class CampusEventUiTest {
         // Click Submit / Publish Event
         page.locator("button[type='submit']:has-text('Publish Event')").click();
 
-        // Assert redirect to dashboard and new event appears in event list
+        // Assert new event appears in event list
         assertThat(page.getByText("Robotics Bootcamp")).isVisible();
-        assertThat(page.getByText("Robotics Club").first()).isVisible();
     }
 
     @Test
