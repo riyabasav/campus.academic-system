@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,6 +31,33 @@
 
 <div class="container py-4">
 
+    <!-- Top Navigation / User Auth Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+        <div class="fw-bold text-primary fs-5">
+            <i class="bi bi-mortarboard-fill me-2"></i>Campus Portal
+        </div>
+        <div>
+            <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark text-wrap me-2" sec:authentication="name">User</span>
+                <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger">ADMIN</span>
+                <form th:action="@{/logout}" method="post" class="d-inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                </form>
+            </div>
+            <div sec:authorize="isAnonymous()">
+                <a th:href="@{/login}" class="btn btn-primary btn-sm fw-semibold me-2">
+                    <i class="bi bi-person-badge me-1"></i>Admin Login
+                </a>
+                <a th:href="@{/oauth2/authorization/google}" class="btn btn-outline-danger btn-sm fw-semibold">
+                    <i class="bi bi-google me-1"></i>Sign in with Google
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Hero Banner -->
     <div class="hero-banner text-center shadow-sm">
         <h1 class="display-5 fw-bold"><i class="bi bi-calendar-event me-2"></i>Campus Events &amp; Club Activities</h1>
@@ -45,13 +73,32 @@
     <div class="row g-4">
         <!-- Upcoming Events Listing -->
         <div class="col-lg-8">
+
+            <!-- Clubs Banner -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center py-2">
+                    <span><i class="bi bi-people-fill me-2"></i>Active Campus Clubs</span>
+                    <span class="badge bg-light text-primary rounded-pill" th:text="${#lists.size(clubs)} + ' Clubs'">3 Clubs</span>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-2">
+                        <div class="col" th:each="club : ${clubs}">
+                            <div class="p-2 border rounded bg-light">
+                                <strong class="text-dark d-block" th:text="${club.name}">Club Name</strong>
+                                <small class="text-muted" th:text="${club.description}">Description</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3 class="h4 mb-0 text-secondary"><i class="bi bi-calendar3 me-2"></i>Upcoming Campus Events</h3>
                 <span class="badge bg-primary rounded-pill" th:text="${#lists.size(events)} + ' Events'">3 Events</span>
             </div>
 
             <div th:if="${#lists.isEmpty(events)}" class="card card-body text-center py-5 shadow-sm">
-                <p class="text-muted mb-0"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No upcoming events found. Create one using the form!</p>
+                <p class="text-muted mb-0"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No upcoming events found.</p>
             </div>
 
             <div class="row row-cols-1 row-cols-md-2 g-3">
@@ -92,50 +139,101 @@
             </div>
         </div>
 
-        <!-- Quick Create Event Form for Club Leads -->
+        <!-- Right Column: Admin Tools / Sign In Prompt -->
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
-                <div class="card-header bg-dark text-white fw-bold py-3">
-                    <i class="bi bi-plus-circle me-2"></i>Create New Event
+
+            <!-- Admin Privileged Forms -->
+            <div sec:authorize="hasRole('ADMIN')">
+
+                <!-- Create Event Form -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-dark text-white fw-bold py-3">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Event
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/events}" th:object="${newEvent}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                            <div class="mb-3">
+                                <label for="title" class="form-label small fw-bold">Event Title</label>
+                                <input type="text" class="form-control form-control-sm" id="title" th:field="*{title}" placeholder="e.g., AI &amp; Web3 Workshop" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="clubName" class="form-label small fw-bold">Club / Host Name</label>
+                                <input type="text" class="form-control form-control-sm" id="clubName" th:field="*{clubName}" placeholder="e.g., Tech Club" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="eventDate" class="form-label small fw-bold">Event Date &amp; Time</label>
+                                <input type="datetime-local" class="form-control form-control-sm" id="eventDate" th:field="*{eventDate}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="location" class="form-label small fw-bold">Venue / Location</label>
+                                <input type="text" class="form-control form-control-sm" id="location" th:field="*{location}" placeholder="e.g., Innovation Hub, Room 301" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label small fw-bold">Capacity (Total Seats)</label>
+                                <input type="number" min="1" class="form-control form-control-sm" id="capacity" th:field="*{capacity}" placeholder="e.g., 50" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label small fw-bold">Description</label>
+                                <textarea class="form-control form-control-sm" id="description" th:field="*{description}" rows="3" placeholder="Brief event description..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                <i class="bi bi-send me-1"></i>Publish Event
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form th:action="@{/events}" th:object="${newEvent}" method="post">
-                        <div class="mb-3">
-                            <label for="title" class="form-label small fw-bold">Event Title</label>
-                            <input type="text" class="form-control form-control-sm" id="title" th:field="*{title}" placeholder="e.g., AI &amp; Web3 Workshop" required>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="clubName" class="form-label small fw-bold">Club / Host Name</label>
-                            <input type="text" class="form-control form-control-sm" id="clubName" th:field="*{clubName}" placeholder="e.g., Tech Club" required>
-                        </div>
+                <!-- Create Club Form -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-secondary text-white fw-bold py-2">
+                        <i class="bi bi-people-fill me-2"></i>Add New Campus Club
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/clubs}" th:object="${newClub}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-                        <div class="mb-3">
-                            <label for="eventDate" class="form-label small fw-bold">Event Date &amp; Time</label>
-                            <input type="datetime-local" class="form-control form-control-sm" id="eventDate" th:field="*{eventDate}" required>
-                        </div>
+                            <div class="mb-2">
+                                <label for="cName" class="form-label small fw-bold">Club Name</label>
+                                <input type="text" class="form-control form-control-sm" id="cName" th:field="*{name}" placeholder="e.g., Robotics Club" required>
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="location" class="form-label small fw-bold">Venue / Location</label>
-                            <input type="text" class="form-control form-control-sm" id="location" th:field="*{location}" placeholder="e.g., Innovation Hub, Room 301" required>
-                        </div>
+                            <div class="mb-3">
+                                <label for="cDesc" class="form-label small fw-bold">Description</label>
+                                <input type="text" class="form-control form-control-sm" id="cDesc" th:field="*{description}" placeholder="e.g., Building autonomous robots" required>
+                            </div>
 
-                        <div class="mb-3">
-                            <label for="capacity" class="form-label small fw-bold">Capacity (Total Seats)</label>
-                            <input type="number" min="1" class="form-control form-control-sm" id="capacity" th:field="*{capacity}" placeholder="e.g., 50" required>
-                        </div>
+                            <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">
+                                <i class="bi bi-plus-lg me-1"></i>Add Club
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label small fw-bold">Description</label>
-                            <textarea class="form-control form-control-sm" id="description" th:field="*{description}" rows="3" placeholder="Brief event description..." required></textarea>
-                        </div>
+            </div>
 
-                        <button type="submit" class="btn btn-primary w-100 fw-bold">
-                            <i class="bi bi-send me-1"></i>Publish Event
-                        </button>
-                    </form>
+            <!-- Non-Admin Information Card -->
+            <div sec:authorize="!hasRole('ADMIN')" class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
+                <div class="card-header bg-dark text-white fw-bold py-3">
+                    <i class="bi bi-shield-lock me-2"></i>Administrator Privileges
+                </div>
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-person-lock text-secondary display-4 d-block mb-3"></i>
+                    <h5 class="fw-bold text-dark">Event &amp; Club Management</h5>
+                    <p class="small text-muted mb-3">To publish new campus events or register new campus clubs, please sign in with administrator credentials.</p>
+                    <a th:href="@{/login}" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Admin Sign In
+                    </a>
                 </div>
             </div>
+
         </div>
     </div>
 </div>

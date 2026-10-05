@@ -1,5 +1,6 @@
 package com.campus.events.controller;
 
+import com.campus.events.model.Club;
 import com.campus.events.model.Event;
 import com.campus.events.model.EventRegistration;
 import com.campus.events.service.EventService;
@@ -26,14 +27,28 @@ public class EventController {
     @GetMapping({"/", "/events"})
     public String dashboard(Model model) {
         model.addAttribute("events", eventService.getAllEventsOrderedByDate());
+        model.addAttribute("clubs", eventService.getAllClubs());
         model.addAttribute("newEvent", new Event());
+        model.addAttribute("newClub", new Club());
         return "events";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
     }
 
     @PostMapping("/events")
     public String createEvent(@ModelAttribute("newEvent") Event event, RedirectAttributes redirectAttributes) {
         eventService.saveEvent(event);
         redirectAttributes.addFlashAttribute("successMessage", "Event created successfully!");
+        return "redirect:/";
+    }
+
+    @PostMapping("/clubs")
+    public String createClub(@ModelAttribute("newClub") Club club, RedirectAttributes redirectAttributes) {
+        eventService.saveClub(club);
+        redirectAttributes.addFlashAttribute("successMessage", "Club created successfully!");
         return "redirect:/";
     }
 
