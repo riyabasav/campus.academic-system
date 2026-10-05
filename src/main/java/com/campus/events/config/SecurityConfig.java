@@ -22,9 +22,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/events", "/events/{id}/register", "/login", "/css/**", "/js/**", "/h2-console/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/events").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/clubs").hasRole("ADMIN")
+                .requestMatchers("/", "/events", "/events/{id}/register", "/login", "/css/**", "/js/**", "/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
