@@ -46,9 +46,53 @@ Run the automated build and deployment script:
 
 ---
 
-## Accessing Application Features
+## Setting Up Google / Gmail OAuth2 Authentication
 
-- **Event Dashboard & Creation:** `http://localhost:8080/`
+The `Error 401: invalid_client` error occurs when placeholder OAuth2 credentials (`YOUR_GOOGLE_CLIENT_ID`) are used instead of valid Google Cloud Console credentials registered for your app.
+
+### Step-by-Step Google OAuth2 Setup:
+
+1. **Go to Google Cloud Console**:
+   Navigate to [https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials).
+
+2. **Create OAuth 2.0 Credentials**:
+   - Click **+ CREATE CREDENTIALS** -> **OAuth client ID**.
+   - Select **Application type**: `Web application`.
+   - Set **Name**: `Campus Events App`.
+
+3. **Set Authorized Redirect URIs**:
+   - Under **Authorized redirect URIs**, click **+ ADD URI** and enter:
+     ```
+     http://localhost:8080/login/oauth2/code/google
+     ```
+   - Click **SAVE**.
+
+4. **Copy Client ID & Client Secret**:
+   - Copy the generated **Client ID** (e.g., `123456789-abcdef.apps.googleusercontent.com`) and **Client Secret**.
+
+5. **Pass Credentials to Application**:
+   - **Option A (Environment Variables in PowerShell):**
+     ```powershell
+     $env:GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+     $env:GOOGLE_CLIENT_SECRET="your-client-secret"
+     .\deploy.ps1
+     ```
+   - **Option B (Edit `application.properties` directly):**
+     ```properties
+     spring.security.oauth2.client.registration.google.client-id=your-client-id.apps.googleusercontent.com
+     spring.security.oauth2.client.registration.google.client-secret=your-client-secret
+     ```
+
+---
+
+## Accessing Application Features & Roles
+
+- **Event Dashboard & Public Listing:** `http://localhost:8080/`
+- **Admin Form Login:** `http://localhost:8080/login`
+  - **User ID:** `Admin`
+  - **Password:** `despu@admin123`
+  - **Privileges:** Add new events (`POST /events`) and create new campus clubs (`POST /clubs`).
+- **Student Sign In / Registration:** Click **Sign in with Google** on the login page or top navigation bar.
 - **H2 In-Memory Database Console:** `http://localhost:8080/h2-console`
   - **JDBC URL:** `jdbc:h2:mem:campusdb`
   - **User:** `sa`
