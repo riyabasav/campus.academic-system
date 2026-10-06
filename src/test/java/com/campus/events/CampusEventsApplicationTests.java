@@ -73,7 +73,17 @@ class CampusEventsApplicationTests {
     }
 
     @Test
-    void testShowRegistrationForm() throws Exception {
+    void testShowRegistrationFormAnonymousRedirect() throws Exception {
+        Event event = eventRepository.findAll().get(0);
+
+        mockMvc.perform(get("/events/" + event.getId() + "/register"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    @WithMockUser(username = "alex_student", roles = {"USER"})
+    void testShowRegistrationFormAsStudentUser() throws Exception {
         Event event = eventRepository.findAll().get(0);
 
         mockMvc.perform(get("/events/" + event.getId() + "/register"))
@@ -85,7 +95,8 @@ class CampusEventsApplicationTests {
 
     @Test
     @Transactional
-    void testProcessRegistrationAndPassGeneration() throws Exception {
+    @WithMockUser(username = "alex_student", roles = {"USER"})
+    void testProcessRegistrationAndPassGenerationAsStudentUser() throws Exception {
         Event event = new Event(
                 "Design Systems Seminar",
                 "UI/UX Club",
@@ -115,6 +126,6 @@ class CampusEventsApplicationTests {
         assertThat(reg.getStudentName()).isEqualTo("Jane Doe");
         assertThat(reg.getStudentEmail()).isEqualTo("jane.doe@campus.edu");
         assertThat(reg.getTicketCode()).startsWith("EVT-");
-        assertThat(reg.getTicketCode()).hasSize(10); // "EVT-" (4 chars) + 6 hex chars = 10 chars total (EVT-XXXXXX)
+        assertThat(reg.getTicketCode()).hasSize(10);
     }
 }
