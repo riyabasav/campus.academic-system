@@ -11,9 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -56,8 +59,35 @@ public class EventService {
         return clubRepository.save(club);
     }
 
+    public boolean isStudentRegisteredForEvent(Long eventId, String studentEmail) {
+        if (studentEmail == null || studentEmail.trim().isEmpty()) {
+            return false;
+        }
+        return registrationRepository.existsByEventIdAndStudentEmailIgnoreCase(eventId, studentEmail.trim());
+    }
+
+    public Set<Long> getRegisteredEventIdsForStudent(String studentEmail) {
+        if (studentEmail == null || studentEmail.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+        return registrationRepository.findByStudentEmailIgnoreCase(studentEmail.trim())
+                .stream()
+                .map(reg -> reg.getEvent().getId())
+                .collect(Collectors.toSet());
+    }
+
     @Transactional
     public EventRegistration registerStudentForEvent(Long eventId, String studentName, String studentEmail) {
+        if (studentEmail == null || studentEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("Student email address is required.");
+        }
+
+        String normalizedEmail = studentEmail.trim();
+
+        if (isStudentRegisteredForEvent(eventId, normalizedEmail)) {
+            throw new IllegalStateException("You have already registered for this event.");
+        }
+
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("Event not found with ID: " + eventId));
 
@@ -69,7 +99,7 @@ public class EventService {
 
         EventRegistration registration = new EventRegistration(
                 studentName,
-                studentEmail,
+                normalizedEmail,
                 ticketCode,
                 LocalDateTime.now(),
                 event
