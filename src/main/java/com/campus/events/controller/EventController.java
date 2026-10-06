@@ -1,5 +1,6 @@
 package com.campus.events.controller;
 
+import com.campus.events.config.DynamicOAuth2ClientRegistrationRepository;
 import com.campus.events.model.Club;
 import com.campus.events.model.Event;
 import com.campus.events.model.EventRegistration;
@@ -18,10 +19,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class EventController {
 
     private final EventService eventService;
+    private final DynamicOAuth2ClientRegistrationRepository clientRegistrationRepository;
 
     @Autowired
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, DynamicOAuth2ClientRegistrationRepository clientRegistrationRepository) {
         this.eventService = eventService;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @GetMapping({"/", "/events"})
@@ -36,6 +39,14 @@ public class EventController {
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    @GetMapping("/oauth2/authorization/google")
+    public String handleGoogleLoginRedirect() {
+        if (!clientRegistrationRepository.isGoogleConfigured()) {
+            return "redirect:/oauth2-setup";
+        }
+        return "redirect:/oauth2/authorization/google";
     }
 
     @PostMapping("/events")
