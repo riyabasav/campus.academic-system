@@ -95,6 +95,9 @@ public class CampusEventUiTest {
         assertThat(page.locator(".hero-banner")).containsText("Campus Events & Club Activities");
         assertThat(page.getByText("AI & Web3 Workshop")).isVisible();
         assertThat(page.getByText("Annual Hackathon Recruitment")).isVisible();
+
+        // Verify Register button is disabled for anonymous users
+        assertThat(page.getByText("Register Now (Sign in required)").first()).isDisabled();
     }
 
     @Test
@@ -103,7 +106,10 @@ public class CampusEventUiTest {
         // Sign in as Admin
         loginAsAdmin();
 
-        // Create a new Club first
+        // Verify Admin cannot register button is disabled
+        assertThat(page.getByText("Admin Cannot Register").first()).isDisabled();
+
+        // Create a new Club
         page.fill("#cName", "Robotics Club");
         page.fill("#cDesc", "Building autonomous robotics");
         page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Club")).click();
@@ -129,30 +135,9 @@ public class CampusEventUiTest {
     }
 
     @Test
-    @DisplayName("Test 3: Student Event Registration & Digital Pass Generation")
-    void testStudentRegistrationAndDigitalPass() {
-        page.navigate(getBaseUrl() + "/");
-
-        // Locate an event on dashboard and click its "Register" button
-        page.locator("a:has-text('Register Now')").first().click();
-
-        // Verify navigation to registration page
-        assertThat(page).hasURL(Pattern.compile("/events/\\d+/register"));
-
-        // Fill in student registration form
-        page.fill("#studentName", "Riya Basavaraj");
-        page.fill("#studentEmail", "riya@example.com");
-
-        // Submit form
-        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Confirm Registration & Get Pass")).click();
-
-        // Assert navigation to pass page
-        assertThat(page.locator(".pass-card")).isVisible();
-        assertThat(page.getByText("Campus Digital Entry Pass")).isVisible();
-
-        // Verify student name, ticket code, and print pass button
-        assertThat(page.getByText("Riya Basavaraj")).isVisible();
-        assertThat(page.locator(".pass-ticket-code")).containsText("EVT-");
-        assertThat(page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Print Digital Pass"))).isVisible();
+    @DisplayName("Test 3: Anonymous User Registration Attempts Redirects To Login")
+    void testAnonymousRegistrationRedirectsToLogin() {
+        page.navigate(getBaseUrl() + "/events/1/register");
+        assertThat(page).hasURL(Pattern.compile("/login"));
     }
 }

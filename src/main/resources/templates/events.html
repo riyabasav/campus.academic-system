@@ -70,6 +70,11 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="row g-4">
         <!-- Upcoming Events Listing -->
         <div class="col-lg-8">
@@ -124,14 +129,31 @@
                             </ul>
 
                             <div class="mt-auto">
-                                <a th:if="${event.remainingSeats > 0}"
-                                   th:href="@{/events/{id}/register(id=${event.id})}"
-                                   class="btn btn-outline-primary w-100 btn-sm fw-semibold">
-                                    <i class="bi bi-ticket-perforated me-1"></i>Register Now
-                                </a>
-                                <button th:if="${event.remainingSeats <= 0}" class="btn btn-secondary w-100 btn-sm" disabled>
-                                    <i class="bi bg-x-circle me-1"></i>Full Capacity
-                                </button>
+                                <!-- Enabled Register Button ONLY for Google Logged-In Users -->
+                                <div sec:authorize="isAuthenticated() and !hasRole('ADMIN')">
+                                    <a th:if="${event.remainingSeats > 0}"
+                                       th:href="@{/events/{id}/register(id=${event.id})}"
+                                       class="btn btn-outline-primary w-100 btn-sm fw-semibold">
+                                        <i class="bi bi-ticket-perforated me-1"></i>Register Now
+                                    </a>
+                                    <button th:if="${event.remainingSeats <= 0}" class="btn btn-secondary w-100 btn-sm" disabled>
+                                        <i class="bi bi-x-circle me-1"></i>Full Capacity
+                                    </button>
+                                </div>
+
+                                <!-- Disabled Register Button for Anonymous / Unauthenticated Users -->
+                                <div sec:authorize="isAnonymous()">
+                                    <button class="btn btn-outline-secondary w-100 btn-sm" disabled title="Please sign in with Google to enable registration">
+                                        <i class="bi bi-lock-fill me-1"></i>Register Now (Sign in required)
+                                    </button>
+                                </div>
+
+                                <!-- Disabled Register Button for Admin Users -->
+                                <div sec:authorize="hasRole('ADMIN')">
+                                    <button class="btn btn-secondary w-100 btn-sm" disabled title="Admins cannot register for events">
+                                        <i class="bi bi-shield-slash me-1"></i>Admin Cannot Register
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -219,8 +241,8 @@
 
             </div>
 
-            <!-- Non-Admin Information Card -->
-            <div sec:authorize="!hasRole('ADMIN')" class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
+            <!-- Admin Information Card (ONLY Visible to Anonymous/Unauthenticated Visitors, HIDDEN when logged in via Google) -->
+            <div sec:authorize="isAnonymous()" class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
                 <div class="card-header bg-dark text-white fw-bold py-3">
                     <i class="bi bi-shield-lock me-2"></i>Administrator Privileges
                 </div>

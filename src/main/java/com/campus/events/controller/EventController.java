@@ -6,6 +6,8 @@ import com.campus.events.model.Event;
 import com.campus.events.model.EventRegistration;
 import com.campus.events.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,7 +66,21 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}/register")
-    public String showRegistrationForm(@PathVariable("id") Long id, Model model) {
+    public String showRegistrationForm(@PathVariable("id") Long id, Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with Google to register for campus events.");
+            return "redirect:/login";
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Administrators are not permitted to register for events.");
+            return "redirect:/";
+        }
+
         Event event = eventService.getEventById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid event Id:" + id));
         model.addAttribute("event", event);
@@ -75,8 +91,23 @@ public class EventController {
     public String processRegistration(@PathVariable("id") Long id,
                                       @RequestParam("studentName") String studentName,
                                       @RequestParam("studentEmail") String studentEmail,
+                                      Authentication authentication,
                                       Model model,
                                       RedirectAttributes redirectAttributes) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please sign in with Google to register for campus events.");
+            return "redirect:/login";
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+
+        if (isAdmin) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Administrators are not permitted to register for events.");
+            return "redirect:/";
+        }
+
         try {
             EventRegistration registration = eventService.registerStudentForEvent(id, studentName, studentEmail);
             model.addAttribute("registration", registration);
