@@ -131,12 +131,22 @@
                             <div class="mt-auto">
                                 <!-- Enabled Register Button ONLY for Google Logged-In Users -->
                                 <div sec:authorize="isAuthenticated() and !hasRole('ADMIN')">
-                                    <a th:if="${event.remainingSeats > 0}"
+                                    <!-- Check if already registered -->
+                                    <button th:if="${registeredEventIds != null and registeredEventIds.contains(event.id)}"
+                                            class="btn btn-secondary w-100 btn-sm fw-semibold" disabled title="You have already registered for this event">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Already Registered
+                                    </button>
+
+                                    <!-- If not registered and seats available -->
+                                    <a th:if="${(registeredEventIds == null or !registeredEventIds.contains(event.id)) and event.remainingSeats > 0}"
                                        th:href="@{/events/{id}/register(id=${event.id})}"
                                        class="btn btn-outline-primary w-100 btn-sm fw-semibold">
                                         <i class="bi bi-ticket-perforated me-1"></i>Register Now
                                     </a>
-                                    <button th:if="${event.remainingSeats <= 0}" class="btn btn-secondary w-100 btn-sm" disabled>
+
+                                    <!-- If not registered and full capacity -->
+                                    <button th:if="${(registeredEventIds == null or !registeredEventIds.contains(event.id)) and event.remainingSeats <= 0}"
+                                            class="btn btn-secondary w-100 btn-sm" disabled>
                                         <i class="bi bi-x-circle me-1"></i>Full Capacity
                                     </button>
                                 </div>

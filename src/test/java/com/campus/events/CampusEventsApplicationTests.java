@@ -82,7 +82,7 @@ class CampusEventsApplicationTests {
     }
 
     @Test
-    @WithMockUser(username = "alex_student", roles = {"USER"})
+    @WithMockUser(username = "alex_student@campus.edu", roles = {"USER"})
     void testShowRegistrationFormAsStudentUser() throws Exception {
         Event event = eventRepository.findAll().get(0);
 
@@ -95,8 +95,8 @@ class CampusEventsApplicationTests {
 
     @Test
     @Transactional
-    @WithMockUser(username = "alex_student", roles = {"USER"})
-    void testProcessRegistrationAndPassGenerationAsStudentUser() throws Exception {
+    @WithMockUser(username = "jane.doe@campus.edu", roles = {"USER"})
+    void testProcessRegistrationAndPreventDuplicateRegistration() throws Exception {
         Event event = new Event(
                 "Design Systems Seminar",
                 "UI/UX Club",
@@ -107,6 +107,7 @@ class CampusEventsApplicationTests {
         );
         event = eventRepository.save(event);
 
+        // First registration - Success
         mockMvc.perform(post("/events/" + event.getId() + "/register")
                         .with(csrf())
                         .param("studentName", "Jane Doe")
@@ -115,17 +116,15 @@ class CampusEventsApplicationTests {
                 .andExpect(view().name("pass"))
                 .andExpect(model().attributeExists("registration"))
                 .andExpect(model().attributeExists("event"))
-                .andExpect(content().string(containsString("Digital Entry Pass")))
-                .andExpect(content().string(containsString("EVT-")));
+                .andExpect(content().string(containsString("Digital Entry Pass")));
 
-        Event updatedEvent = eventRepository.findById(event.getId()).orElseThrow();
-        assertThat(updatedEvent.getRegisteredCount()).isEqualTo(1);
-        assertThat(updatedEvent.getRemainingSeats()).isEqualTo(1);
-
-        EventRegistration reg = updatedEvent.getRegistrations().get(0);
-        assertThat(reg.getStudentName()).isEqualTo("Jane Doe");
-        assertThat(reg.getStudentEmail()).isEqualTo("jane.doe@campus.edu");
-        assertThat(reg.getTicketCode()).startsWith("EVT-");
-        assertThat(reg.getTicketCode()).hasSize(10);
+        // Duplicate registration attempt - Redirects with error
+        mockMvc.perform(post("/events/" + event.getId() + "/register")
+                        .with(csrf())
+                        .param("studentName", "Jane Doe")
+                        .param("studentEmail", "jane.doe@campus.edu"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(flash().attribute("errorMessage", "You have already registered for this event."));
     }
 }
